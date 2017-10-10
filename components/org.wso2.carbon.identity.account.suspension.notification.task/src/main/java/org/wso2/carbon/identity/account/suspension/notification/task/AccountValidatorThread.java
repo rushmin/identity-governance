@@ -53,6 +53,12 @@ public class AccountValidatorThread implements Runnable {
     @Override
     public void run() {
 
+
+        if(log.isDebugEnabled()){
+            log.debug(String.format("ACCOUNT-SUSPENTION-DEBUGGING : Task started."));
+        }
+
+
         RealmService realmService = NotificationTaskDataHolder.getInstance().getRealmService();
 
         Tenant tenants[] = new Tenant[0];
@@ -73,6 +79,11 @@ public class AccountValidatorThread implements Runnable {
 
     private void handleTask(String tenantDomain) {
 
+        if(log.isDebugEnabled()){
+            log.debug(String.format("ACCOUNT-SUSPENTION-DEBUGGING : Validating account for the tenant '%s'.", tenantDomain));
+        }
+
+
         Property[] identityProperties;
         try {
             // Start Tenant flow
@@ -88,14 +99,33 @@ public class AccountValidatorThread implements Runnable {
             long[] notificationDelays = null;
             for (Property identityProperty : identityProperties) {
 
+
                 if (identityProperty == null) {
+
+                    if(log.isDebugEnabled()){
+                        log.debug("ACCOUNT-SUSPENTION-DEBUGGING : Property is null. Continuing reading other properties.");
+                    }
+
                     continue;
+                }
+
+                if(log.isDebugEnabled()){
+                    log.debug(String.format("ACCOUNT-SUSPENTION-DEBUGGING : Property '%s' => '%s'", identityProperty.getName(), identityProperty.getValue()));
                 }
 
                 if (NotificationConstants.SUSPENSION_NOTIFICATION_ENABLED.equals(identityProperty.getName())) {
                     isEnabled = Boolean.parseBoolean(identityProperty.getValue());
 
+                    if(log.isDebugEnabled()){
+                        log.debug(String.format("ACCOUNT-SUSPENTION-DEBUGGING : Are suspension notifications enabled ?  %s ", (isEnabled? "YES":"NO")));
+                    }
+
                     if (!isEnabled) {
+
+                        if(log.isDebugEnabled()){
+                            log.debug(String.format("ACCOUNT-SUSPENTION-DEBUGGING : Returning since the suspension notifications are not enabled."));
+                        }
+
                         return;
                     }
                 }
@@ -104,6 +134,11 @@ public class AccountValidatorThread implements Runnable {
                         equals(identityProperty.getName())) {
                     try {
                         suspensionDelay = Long.parseLong(identityProperty.getValue());
+
+                        if(log.isDebugEnabled()){
+                            log.debug(String.format("ACCOUNT-SUSPENTION-DEBUGGING : Setting suspension delay : '%d'", suspensionDelay));
+                        }
+
                     } catch (NumberFormatException e) {
                         log.error("Error occurred while reading account suspension delay for tenant: " + tenantDomain,
                                 e);
@@ -118,6 +153,10 @@ public class AccountValidatorThread implements Runnable {
                         for (int i = 0; i < parts.length; i++) {
                             try {
                                 notificationDelays[i] = Long.parseLong(parts[i]);
+                                if(log.isDebugEnabled()){
+                                    log.debug(String.format("ACCOUNT-SUSPENTION-DEBUGGING : Setting notification delay '%d' : '%d'",
+                                            i, notificationDelays[i]));
+                                }
                             } catch (NumberFormatException e) {
                                 log.error("Error occurred while reading account suspension notification delays for "
                                         + "tenant: " + tenantDomain, e);
@@ -128,6 +167,9 @@ public class AccountValidatorThread implements Runnable {
             }
 
             if (!isEnabled) {
+                if(log.isDebugEnabled()){
+                    log.debug(String.format("ACCOUNT-SUSPENTION-DEBUGGING : Returning since the suspension notifications are not enabled."));
+                }
                 return;
             }
 
@@ -173,6 +215,13 @@ public class AccountValidatorThread implements Runnable {
      * @throws IdentityException
      */
     private void disableAccounts(String tenantDomain, long suspensionDelay) throws IdentityException {
+
+        if(log.isDebugEnabled()){
+            log.debug(String.format("ACCOUNT-SUSPENTION-DEBUGGING : Trying to disable accounts which are idle than '%d' day(s), " +
+                    "in tenant domain '%s'.", suspensionDelay, tenantDomain));
+        }
+
+
         List<NotificationReceiver> receivers = null;
         try {
             receivers = NotificationReceiversRetrievalManager.getReceivers(suspensionDelay, tenantDomain,
@@ -181,6 +230,12 @@ public class AccountValidatorThread implements Runnable {
         } catch (AccountSuspensionNotificationException e) {
             throw IdentityException.error("Error occurred while retrieving users for account disable", e);
         }
+
+        if(log.isDebugEnabled()){
+            log.debug(String.format("ACCOUNT-SUSPENTION-DEBUGGING : Found '%d' candidate accounts.", receivers.size()));
+        }
+
+
         if (receivers.size() > 0) {
             try {
                 PrivilegedCarbonContext.startTenantFlow();
@@ -192,7 +247,7 @@ public class AccountValidatorThread implements Runnable {
                 // Iterate through all the receivers and disable them
                 for (NotificationReceiver receiver : receivers) {
                     if (log.isDebugEnabled()) {
-                        log.debug("Disabling user " + receiver.getUsername());
+                        log.debug("ACCOUNT-SUSPENTION-DEBUGGING : Disabling user " + receiver.getUsername());
                     }
                     userIdentityManagementAdminService.disableUserAccount(receiver.getUsername(), "email");
                 }

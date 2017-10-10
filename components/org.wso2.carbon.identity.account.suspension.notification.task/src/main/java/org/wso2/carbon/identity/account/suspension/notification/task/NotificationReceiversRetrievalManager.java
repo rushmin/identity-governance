@@ -42,11 +42,23 @@ public class NotificationReceiversRetrievalManager {
         Set<String> userStoreDomains = NotificationReceiversRetrievalUtil.
                 getSuspensionNotificationEnabledUserStores(tenantDomain);
 
+        if(log.isDebugEnabled()){
+            log.debug(String.format("ACCOUNT-SUSPENTION-DEBUGGING : Found '%d' user store domains enabled for account suspension",
+                    userStoreDomains.size()));
+        }
+
         List<NotificationReceiver> receivers = new ArrayList<>();
 
         for (String userStoreDomain : userStoreDomains) {
             NotificationReceiversRetrieval notificationReceiversRetrieval = NotificationReceiversRetrievalUtil
                     .getNotificationReceiversRetrievalForDomain(userStoreDomain, tenantDomain);
+
+            if(log.isDebugEnabled()){
+                log.debug(String.format("ACCOUNT-SUSPENTION-DEBUGGING : NotificationReceiversRetrieval Implementation : '%s'",
+                        NotificationReceiversRetrieval.class.getName()));
+            }
+
+
             if (notificationReceiversRetrieval != null) {
                 long lookupMin = 0;
                 try {

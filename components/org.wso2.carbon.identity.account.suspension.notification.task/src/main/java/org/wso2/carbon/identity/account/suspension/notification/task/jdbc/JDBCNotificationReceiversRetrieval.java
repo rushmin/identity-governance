@@ -82,6 +82,12 @@ public class JDBCNotificationReceiversRetrieval implements NotificationReceivers
             String lastLoginTimeAttribute = claimManager
                     .getAttributeName(userStoreDomain, NotificationConstants.LAST_LOGIN_TIME);
 
+            if(log.isDebugEnabled()){
+                log.debug(String.format("ACCOUNT-SUSPENTION-DEBUGGING : Last login time attribute : '%s'", lastLoginTimeAttribute));
+            }
+
+
+
             dbConnection = getDBConnection(realmConfiguration);
             sqlStmt = NotificationConstants.GET_USERS_FILTERED_BY_LAST_LOGIN_TIME;
             prepStmt = dbConnection.prepareStatement(sqlStmt);
@@ -90,6 +96,11 @@ public class JDBCNotificationReceiversRetrieval implements NotificationReceivers
             prepStmt.setString(3, String.valueOf(lookupMax));
             prepStmt.setString(4, String.valueOf(IdentityTenantUtil.getTenantId(tenantDomain)));
             prepStmt.setString(5, String.valueOf(IdentityTenantUtil.getTenantId(tenantDomain)));
+
+            if(log.isDebugEnabled()){
+                log.debug(String.format("ACCOUNT-SUSPENTION-DEBUGGING : Executing : '%s'", prepStmt));
+            }
+
 
             resultSet = prepStmt.executeQuery();
 

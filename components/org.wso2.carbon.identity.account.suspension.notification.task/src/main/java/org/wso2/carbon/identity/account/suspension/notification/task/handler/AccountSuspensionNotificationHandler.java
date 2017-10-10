@@ -209,7 +209,19 @@ public class AccountSuspensionNotificationHandler extends AbstractEventHandler i
 
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(NotificationTaskDataHolder.getInstance().
                 getNotificationSendingThreadPoolSize());
+
+
+        if(log.isDebugEnabled()){
+            log.debug(String.format("ACCOUNT-SUSPENTION-DEBUGGING : Scheduling AccountValidatorThread. " +
+                    "First execution will be in %d in seconds and will be executed in every %d seconds.",
+                    delay, schedulerDelayInSeconds));
+        }
+
         scheduler.scheduleAtFixedRate(new AccountValidatorThread(), delay, schedulerDelayInSeconds, TimeUnit.SECONDS);
+
+        if(log.isDebugEnabled()){
+            log.debug("ACCOUNT-SUSPENTION-DEBUGGING : Scheduling done.");
+        }
     }
 
     private boolean isSuspensionNotificationEnabled(Event event) throws IdentityEventException {
